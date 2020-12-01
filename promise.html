@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width" />
+		<title>
+			候鸟数据
+		</title>
+		<script src="./js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<body>
+		<ul id="box"></ul>
+		<script type="text/javascript">
+			//promise.all
+			$(function(){
+				//创建promise对象
+				const p1 = new Promise((resolve)=>{
+					$.getJSON("./json/01.json",function(res){
+						resolve(res.matchedProducts);
+					});
+				});
+				const p2 = new Promise((resolve)=>{
+					$.getJSON("./json/02.json",function(res){
+						resolve(res.matchedProducts);
+					});
+				});
+				const p3 = new Promise((resolve)=>{
+					$.getJSON("./json/03.json",function(res){
+						resolve(res.matchedProducts);
+					});
+				});
+			function getList(page){
+				//创建 promise对象，而这个对象可以返回一个将来发生的正确或错误的结果
+				const p = new Promise((resolve,reject)=>{
+					$.ajax({
+						type:'get',//请求方式
+						url:'./json/0'+page+'.json',//请求地址
+						contentType: "application/json;charset=UTF-8",//请求的媒体类型
+						success:function(res){
+							resolve(res.matchedProducts);
+						},
+						error:function(err){
+							reject(err);
+						}
+					});
+				});
+				return p;
+			}
+				
+				//渲染页面
+				function writeHtml(res){
+					for(var i = 0;i <res.length;i++){
+						var $li = $(`<li>序号：${res[i].collection_num},${res[i].pro_title}</li>`);
+						$('#box').append($li);
+					}
+				}
+				//将异步转同步
+				async function task(){
+					let p1 = await  getList(1);
+					writeHtml(p1);
+					let p2 = await  getList(2);
+					writeHtml(p2);
+					let p3 = await  getList(3);
+					writeHtml(p3);
+				}
+				task();
+				
+				//使用promise.all 调用,可以解决多个异步回调数据的同步问题，
+				//缺点：如果有一个promise出错，那么后面的都不能执行
+				//解决方法：可以使用Promise.allSettled()；
+				Promise.all([p1,p2,p3]).then((data)=>{
+					for(var i = 0;i<data.length;i++){
+						writeHtml(data[i]);
+					}
+				})
+			})
+		</script>
+	</body>
+</html>
